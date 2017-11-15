@@ -319,6 +319,7 @@ class LogsDownloader:
     Handle a case of process termination
     """
     def set_signal_handling(self, sig, frame):
+        self.logger.debug("In signal handler")
         if sig == signal.SIGTERM:
             self.running = False
             self.logger.info("Got a termination signal, will now shutdown and exit gracefully")
@@ -371,6 +372,13 @@ class LastFileId:
     def get_next_file_name(self):
         # get the current stored last known successfully downloaded log file
         curr_log_file_name_arr = self.get_last_log_id().split("_")
+
+        # FIX - if LastKnownDownloadedFileId.txt is edited, need to remove a newline (if it exists)
+        # "get the current id" code below breaks if a newline is added to the last file Id
+        # with an error from integer conversion.  The additional rstrip will clear any whitespace or newline which
+        # may be added to the file by a text editor
+        curr_log_file_name_arr[1] = curr_log_file_name_arr[1].rstrip()
+
         # get the current id
         curr_log_file_id = int(curr_log_file_name_arr[1].rstrip(".log")) + 1
         # build the next log file name
@@ -559,7 +567,8 @@ if __name__ == "__main__":
     path_to_config_folder = "/etc/incapsula/logs/config"
     path_to_system_logs_folder = "/var/log/incapsula/logsDownloader/"
     # default log level
-    system_logs_level = "INFO"
+    #system_logs_level = "INFO"
+    system_logs_level = "DEBUG"
     # read arguments
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'c:l:v:h', ['configpath=', 'logpath=', 'loglevel=', 'help'])
